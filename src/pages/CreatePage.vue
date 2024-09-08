@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-import { AVAILABILITY_WEEK_LIST, VISIT_DURATION_LIST } from '@/models/constants';
+import { AVAILABILITY_WEEK_LIST, LOCALE_DATESTRING_OPTIONS, VISIT_DURATION_LIST } from '@/models/constants';
+import ModalComponent from '@/components/ModalComponent.vue';
 import type { Available } from '@/models/types';
 
 const currentDate = new Date;
@@ -12,78 +13,77 @@ const firstDayOfWeek = new Date(currentDate.setDate(first)).toUTCString();
 const lastDayOfWeek = new Date(currentDate.setDate(last)).toUTCString();
 
 const isModalOpen = ref(false);
-const selectedDuration = ref('');
-const hasTourCall = ref(false);
+
+const selectedIndex = ref(-1);
 // { is_available: true, times: [['10:00', '11:00']] }
 const availabilityList = ref<Available[]>([]);
 AVAILABILITY_WEEK_LIST.forEach(() => (
   availabilityList.value.push({
     is_available: false,
-    times: [],
+    times: [[]],
   })
 ));
 
-function handleClickCheckbox(index: number) {
-  console.log(index);
+function handleToggleCheckbox(index: number) {
   if (availabilityList.value[index].is_available) {
     availabilityList.value[index].is_available = true;
-    return;
+  } else {
+    availabilityList.value[index].is_available = false;
   }
-  availabilityList.value[index].is_available = false;
-  return;
 }
 
-function handleClickAdd(index: number) {
-  isModalOpen.value = true;
+function handleToggleModal(index = -1) {
+  isModalOpen.value = !isModalOpen.value;
+  selectedIndex.value = index;
+}
+
+function transformDate(date: string) {
+  return new Date(date).toLocaleDateString("id-ID", LOCALE_DATESTRING_OPTIONS);
 }
 </script>
 
 <template>
-  <div v-if="isModalOpen" class="w-full max-w-xs">
-    <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="duration">
-          Visit Duration
-        </label>
-        <select id="duration" v-model="selectedDuration" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-          <option v-for="duration in VISIT_DURATION_LIST" :key="duration.value">
-            {{ duration.label }}
-          </option>
-        </select>
-      </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="booking_count">
-          No. of Booking / Session
-        </label>
-        <input id="booking_count" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text">
-      </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="has_tour_call">
-          Allow video tour call
-        </label>
-        <input id="has_tour_call" v-model="hasTourCall" type="checkbox" >
-      </div>
-    </form>
-  </div>
+  <ModalComponent
+    :is-open="isModalOpen"
+    :selected-index="selectedIndex"
+    :availability-list="availabilityList"
+    :on-toggle="handleToggleModal"
+  />
 
-  <div class="w-2/4 bg-white p-4 border-slate-300 border-2 rounded-lg">
-    <h2 class="text-3xl">Availability</h2>
-    <p>Set your weekly recurring schedule</p>
+  <div class="w-3/4 mx-auto bg-white p-4 border-gray-300 border-2 rounded-lg">
+    <div class="flex items-center gap-4">
+      <RouterLink to="/">
+        <button title="Back">
+          &#9664;
+        </button>
+      </RouterLink>
+      <h2 class="text-3xl">Availability on {{ transformDate(firstDayOfWeek) }} - {{ transformDate(lastDayOfWeek) }}</h2>
+    </div>
+    <p class="text-neutral-400 text-sm mt-1 mb-4">Set your weekly recurring schedule</p>
 
     <div v-for="(availability, index) in AVAILABILITY_WEEK_LIST" :key="availability.value">
-      <div class="flex items-center justify-between mb-2">
-        <input :id="`is_available_${availability.value}`" v-model="availabilityList[index].is_available" type="checkbox" @change="handleClickCheckbox(index)" >
-        <p class="m-0 mx-4" :style="{ flex: '0 0 35px' }">{{ availability.label }}</p>
-        <div v-if="availabilityList[index].is_available" class="flex items-center justify-between">
-          <input :id="`start_time_${availability.value}`" v-model="availabilityList[index].times[0]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="time" min="7" max="19">
-          <span class="mx-2">-</span>
-          <input :id="`end_time_${availability.value}`" v-model="availabilityList[index].times[1]" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="time">
-          <button class="py-1 px-3 mx-2 rounded-full border-gray-300 border-2">x</button>
-          <button class="py-1 px-3 rounded-full border-gray-300 border-2" @click="handleClickAdd(index)">+</button>
+      <div class="flex items-start justify-between min-h-11 mb-3">
+        <input :id="`is_available_${availability.value}`" v-model="availabilityList[index].is_available" class="my-2.5" type="checkbox" :style="{ flex: '0 0 13px' }" @change="handleToggleCheckbox(index)">
+        <p class="mt-1 mx-4" :style="{ flex: '0 0 36px' }">{{ availability.label }}</p>
+        <div
+          v-if="availabilityList[index].is_available"
+          :style="{ flex: '0 1 calc(100% - 13px - 36px)' }"
+        >
+          <div
+            v-for="(time, indexTime) in availabilityList[index].times"
+            :key="indexTime"
+            class="flex items-center justify-between mb-1"
+          >
+            <input :id="`start_time_${availability.value}`" v-model="time[0]" class="shadow appearance-none border rounded-lg w-full py-1 px-3 text-gray-700 leading-tight h-10 focus:outline-none focus:shadow-outline" type="time" min="7" max="19">
+            <span class="mx-2">-</span>
+            <input :id="`end_time_${availability.value}`" v-model="time[1]" class="shadow appearance-none border rounded-lg w-full py-1 px-3 text-gray-700 leading-tight h-10 focus:outline-none focus:shadow-outline" type="time">
+            <button class="py-1 px-3 h-10 mx-2 rounded-lg border-gray-300 border-2">Remove</button>
+            <button class="py-1 px-3 h-10 rounded-lg bg-blue-600 text-white" @click="handleToggleModal(index)">Add</button>
+          </div>
         </div>
-        <div v-else>
-          <span class="">Unavailable</span>
-        </div>
+        <div v-else class="text-neutral-400 italic text-sm mt-1.5" :style="{ flex: '0 1 calc(100% - 13px - 35px)' }">
+          <span>Unavailable</span>
+        </div>  
       </div>
     </div>
   </div>

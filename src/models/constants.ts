@@ -1,3 +1,5 @@
+export const LOCALE_DATESTRING_OPTIONS = { year: 'numeric', month: 'short', day: 'numeric' } as Intl.DateTimeFormatOptions;
+
 export const VISIT_DURATION_LIST = [
   {
     value: 15,

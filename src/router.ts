@@ -1,15 +1,22 @@
-import { createMemoryHistory, createRouter } from 'vue-router';
+import { createWebHistory, createRouter } from 'vue-router';
 
-import HomePage from './pages/HomePage.vue';
-import CreatePage from './pages/CreatePage.vue';
+import HomePage from '@/pages/HomePage.vue';
 
 const routes = [
-  { path: '/', component: HomePage },
-  { path: '/create', component: CreatePage },
+  {
+    path: '/',
+    name: 'Home',
+    component: HomePage,
+  },
+  {
+    path: '/create',
+    name: 'Create',
+    component: () => import('@/pages/CreatePage.vue'),
+  },
 ];
 
 const router = createRouter({
-  history: createMemoryHistory(),
+  history: createWebHistory(),
   routes,
 });
 
