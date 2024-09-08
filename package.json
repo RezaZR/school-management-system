@@ -11,7 +11,11 @@
     "test": "jest"
   },
   "dependencies": {
-    "vue": "^3.2.37"
+    "@schedule-x/calendar": "^1.62.0",
+    "@schedule-x/theme-default": "^1.62.0",
+    "@schedule-x/vue": "^1.58.0",
+    "vue": "^3.2.37",
+    "vue-router": "^4.4.3"
   },
   "devDependencies": {
     "@types/jest": "^28.1.2",
